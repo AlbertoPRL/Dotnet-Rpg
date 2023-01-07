@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace dotnet_rpg.Model
-{
+{ 
     public class Character
     {
         public int Id { get; set; }
