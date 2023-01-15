@@ -50,6 +50,7 @@ namespace dotnet_rpg.Services.CharacterService
         public async Task<ServiceResponse<GetCharacterDto>> UpdateCharacter(UpdateCharacterDto updatedCharacter)
         {
             ServiceResponse<GetCharacterDto> response = new();
+            try{
             Character character = characters.FirstOrDefault(c => c.Id == updatedCharacter.Id);
             character.Name = updatedCharacter.Name;
             character.HitPoints = updatedCharacter.HitPoints;
@@ -59,6 +60,11 @@ namespace dotnet_rpg.Services.CharacterService
             character.Class = updatedCharacter.Class;
 
             response.Data = _mapper.Map<GetCharacterDto>(character);
+            }catch (Exception ex)
+            {
+                response.Succes = false;
+                response.Message= ex.Message;
+            }
             return response;
         }
     }
