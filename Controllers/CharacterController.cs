@@ -10,19 +10,20 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_rpg.Controllers
 {
-    [ApiController]
+    [ApiController] //Attributes 
     [Route("api/[controller]")]
     
-    public class CharacterController : ControllerBase
+    public class CharacterController : ControllerBase //To be a propper controller the class has to inherit from ControllerBase(take a look after to the class)
+
     {
         private readonly ICharacterService _characterService;
         public CharacterController(ICharacterService characterService)
         {
-            _characterService = characterService;
-            
+            _characterService = characterService;            
         }
+        
         [HttpGet("GetAll")]
-        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> Get()
+        public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> Get()//Look for IActionResultClass
         {
             return Ok(await _characterService.GetAllCharacters());
         }
@@ -35,11 +36,13 @@ namespace dotnet_rpg.Controllers
 
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> addCharacter(AddCharacterDto newCharacter)
-        {
-
-            
+        {            
             return Ok(await _characterService.AddCharacter(newCharacter));
-
+        }
+        [HttpPut]
+        public async Task<ActionResult<ServiceResponse<GetCharacterDto>>> UpdateCharacter(UpdateCharacterDto updatedCharacter)
+        {            
+            return Ok(await _characterService.UpdateCharacter(updatedCharacter));
         }
     }
 }
