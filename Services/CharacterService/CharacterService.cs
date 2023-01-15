@@ -52,12 +52,15 @@ namespace dotnet_rpg.Services.CharacterService
             ServiceResponse<GetCharacterDto> response = new();
             try{
             Character character = characters.FirstOrDefault(c => c.Id == updatedCharacter.Id);
-            character.Name = updatedCharacter.Name;
-            character.HitPoints = updatedCharacter.HitPoints;
-            character.Strenght = updatedCharacter.Strenght;
-            character.Defense = updatedCharacter.Defense;
-            character.Intelligence = updatedCharacter.Intelligence;
-            character.Class = updatedCharacter.Class;
+            _mapper.Map<Character>(updatedCharacter);
+            //Theres is another way: _mapper.Map(updatedCharacter, character); where updatedCharacter is the source and character is the destinatio.
+            //The lines behind are the same as if i weren't using the automapper _mapper.Map<Character>(updatedCharacter);
+            // character.Name = updatedCharacter.Name;
+            // character.HitPoints = updatedCharacter.HitPoints;
+            // character.Strenght = updatedCharacter.Strenght;
+            // character.Defense = updatedCharacter.Defense;
+            // character.Intelligence = updatedCharacter.Intelligence;
+            // character.Class = updatedCharacter.Class;
 
             response.Data = _mapper.Map<GetCharacterDto>(character);
             }catch (Exception ex)
