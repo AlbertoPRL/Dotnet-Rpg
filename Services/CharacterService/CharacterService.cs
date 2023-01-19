@@ -25,6 +25,9 @@ public class CharacterService : ICharacterService
         var characters = await _context.Characters.ToListAsync();
         response.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         return response;
+        // response.Data = await _context.Characters
+        //     .Select(c => _mapper.Map<GetCharacterDto>(c))
+        //     .ToListAsync();
     }
     
     public async Task<ServiceResponse<List<GetCharacterDto>>> GetAllCharacters()
@@ -33,13 +36,12 @@ public class CharacterService : ICharacterService
         var characters = await _context.Characters.ToListAsync();
         response.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         return response;
-
     }
 
     public async Task<ServiceResponse<GetCharacterDto>> GetCharacterById(int id)
     {
         var response = new ServiceResponse<GetCharacterDto>();
-        var character = await _context.Characters.FindAsync(id);
+        var character = await _context.Characters.FindAsync(id);//(can also use FirstOrDefault();)
         response.Data = _mapper.Map<GetCharacterDto>(character);
         return response;
     }
@@ -82,7 +84,7 @@ public class CharacterService : ICharacterService
                 return response;
             }
             _context.Characters.Remove(character);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             response.Data = _context.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         }
         catch (Exception ex)

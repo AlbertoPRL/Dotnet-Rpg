@@ -14,5 +14,6 @@ namespace dotnet_rpg.Data
         }
 
         public DbSet<Character> Characters { get; set; } //Usually you just need to prulalize the name of the entity.
+        public DbSet<User>  Users {get; set;} //This will create the conexion with the database table "Users"
     }
 }

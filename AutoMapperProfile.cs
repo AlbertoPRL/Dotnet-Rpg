@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
+using dotnet_rpg.DTOs.User;
 using dotnet_rpg.DTOs.Character;
 
 namespace dotnet_rpg
@@ -14,7 +11,7 @@ namespace dotnet_rpg
             CreateMap<Character, GetCharacterDto>();
             CreateMap<AddCharacterDto, Character>();
             CreateMap<UpdateCharacterDto, Character>();
-        }
-        
+            CreateMap<UserRegisterDto, User>();
+        }        
     }
 }
