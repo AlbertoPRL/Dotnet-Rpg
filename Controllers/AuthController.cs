@@ -33,4 +33,14 @@ public class AuthController : ControllerBase
 
         return Ok(response);
     }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<ServiceResponse<int>>> Registrer(UserRegisterDto request)
+    {
+        var user = _map.Map<User>(request);
+        var response = await _authRepo.Login(user.Username, request.Password);
+        if(!response.Succes)
+            return BadRequest(response);
+        return Ok(response);
+    }
 }

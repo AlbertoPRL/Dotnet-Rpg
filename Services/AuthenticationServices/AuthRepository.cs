@@ -6,20 +6,42 @@ using dotnet_rpg.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace dotnet_rpg.Services.AuthenticationServices
 {
     public class AuthRepository : IAuthRepository
     {
         private readonly DataContext _context;
-        public AuthRepository(DataContext context)
+        private readonly IConfiguration _configuration;
+
+        public AuthRepository(DataContext context, IConfiguration configuration)
         {
-            _context = context;            
+            _context = context;
+            _configuration = configuration;
         }
 
-        public Task<ServiceResponse<string>> Login(string username, string password)
+        public async Task<ServiceResponse<string>> Login(string username, string password)
         {
-            throw new NotImplementedException();
+            var response = new ServiceResponse<string>();
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
+            if(user == null)
+            {
+                response.Succes = false;
+                response.Message = "User not found";
+            }
+            else if(!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                response.Succes = false;
+                response.Message = "Wrong password";
+            }
+            else
+            {
+                response.Data = CreateToken(user);
+            }
+            return response;
         }
 
         public async Task<ServiceResponse<int>> Register(User user, string password)
@@ -60,5 +82,34 @@ namespace dotnet_rpg.Services.AuthenticationServices
             return encryptedPassword;
         }
 
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computeHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return computeHash.SequenceEqual(passwordHash);
+            }
+        }
+
+        private string CreateToken(User user)
+        {
+            List<Claim> claims = new(){
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username)
+            };
+
+            SymmetricSecurityKey key = new(System.Text.Encoding.UTF8
+                .GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+            SigningCredentials creds = new(key, SecurityAlgorithms.HmacSha512Signature);
+            SecurityTokenDescriptor tokenDescriptor = new()
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.AddDays(1),
+                SigningCredentials = creds
+            };
+            JwtSecurityTokenHandler tokenHandler = new();
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
     }
 }
