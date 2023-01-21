@@ -8,6 +8,8 @@ public class DataContext : DbContext
 
     public DbSet<User> Users { get; set; } //This will create the conection with the database table "Users"
 
+    public DbSet<Weapon> Weapons { get; set; }
+
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
 

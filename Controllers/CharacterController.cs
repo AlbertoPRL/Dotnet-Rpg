@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using dotnet_rpg.DTOs.Character;
 using dotnet_rpg.Services.CharacterService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace dotnet_rpg.Controllers
 {
+    [Authorize]
     [ApiController] //Attributes 
     [Route("api/[controller]")]
     
@@ -24,7 +27,7 @@ namespace dotnet_rpg.Controllers
         
         [HttpGet("GetAll")]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> Get()//Look for IActionResultClass
-        {
+        {            
             return Ok(await _characterService.GetAllCharacters());
         }
 
@@ -36,7 +39,7 @@ namespace dotnet_rpg.Controllers
 
         [HttpPost]
         public async Task<ActionResult<ServiceResponse<List<GetCharacterDto>>>> addCharacter(AddCharacterDto newCharacter)
-        {            
+        {              
             return Ok(await _characterService.AddCharacter(newCharacter));
         }
         [HttpPut]
