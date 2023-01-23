@@ -9,6 +9,7 @@ public class DataContext : DbContext
     public DbSet<User> Users { get; set; } //This will create the conection with the database table "Users"
 
     public DbSet<Weapon> Weapons { get; set; }
+    public DbSet<Skill> Skills { get; set; }
 
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
@@ -20,5 +21,11 @@ public class DataContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => new { u.Username })
             .IsUnique(true);
+        modelBuilder.Entity<Skill>()
+            .HasData(
+                new Skill {Id = 1, Name = "Fireball", Damage = 30},
+                new Skill {Id = 2, Name = "Frenzy", Damage = 20},
+                new Skill {Id = 3, Name = "Blizzard", Damage = 50}
+            );
     }
 }

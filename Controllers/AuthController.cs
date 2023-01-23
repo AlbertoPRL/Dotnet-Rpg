@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
+using dotnet_rpg.Controllers.Abstractions;
 using dotnet_rpg.DTOs.User;
 using dotnet_rpg.Services.AuthenticationServices;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +8,7 @@ namespace dotnet_rpg.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class AuthController : ControllerBase
+public class AuthController : UserContextController
 {
     private readonly IAuthRepository _authRepo;
     private readonly IMapper _map;
@@ -35,7 +32,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<ServiceResponse<int>>> Registrer(UserRegisterDto request)
+    public async Task<ActionResult<ServiceResponse<int>>> Login(UserRegisterDto request)
     {
         var user = _map.Map<User>(request);
         var response = await _authRepo.Login(user.Username, request.Password);

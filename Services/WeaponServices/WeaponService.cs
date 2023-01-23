@@ -22,17 +22,16 @@ namespace dotnet_rpg.Services.WeaponServices
             _mapper = mapper;
             _context = context;
         }
-
-        private int GetUserId() => int.Parse(_contextAccessor.HttpContext.User
-        .FindFirstValue(ClaimTypes.NameIdentifier));
-        public async Task<ServiceResponse<GetCharacterDto>> AddWeapon(AddWeaponDto newWeapon)
+        public async Task<ServiceResponse<GetCharacterDto>> AddWeapon(AddWeaponDto newWeapon, int userId)
         {
             ServiceResponse<GetCharacterDto> response = new();
             try
             {
                 var character = await _context.Characters
+                    .Include(c => c.Skills)
+                    .Include(c => c.Weapon)
                     .FirstOrDefaultAsync(c => c.Id == newWeapon.CharacterId &&
-                    c.User.Id == GetUserId());//Ask Marcel about implementation of this GetUserId() Method
+                    c.User.Id == userId);//Ask Marcel about implementation of this GetUserId() Method
                 if(character == null)
                 {
                     response.Succes = false;

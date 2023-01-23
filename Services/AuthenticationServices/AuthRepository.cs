@@ -46,7 +46,7 @@ namespace dotnet_rpg.Services.AuthenticationServices
 
         public async Task<ServiceResponse<int>> Register(User user, string password)
         {
-            ServiceResponse<int> response = new ServiceResponse<int>();
+            var response = new ServiceResponse<int>();
             if(await UserExist(user.Username))
             {
                 response.Succes = false;
