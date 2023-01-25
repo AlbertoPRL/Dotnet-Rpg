@@ -24,8 +24,8 @@ public class CharacterService : ICharacterService
         var response = new ServiceResponse<List<GetCharacterDto>>();
         var character = _mapper.Map<Character>(newCharacter);
         character.UserId = userId;
-        _charRepo.Add(character);
-        await _charRepo.SaveChangesAsync();
+        await _context.Characters.AddAsync(character); 
+        await _context.SaveChangesAsync();              
         var characters = await _context.Characters
             .Include(c => c.Weapon)
             .Include(c => c.Skills)
