@@ -10,13 +10,13 @@ namespace dotnet_rpg.Services.CharacterService;
 public class CharacterService : ICharacterService
 {
     private readonly IMapper _mapper;
-    private readonly DataContext _context;
     private readonly CharacterRepository _charRepo;
+    private readonly SkillRepository _skillRepo;
 
-    public CharacterService(IMapper mapper, DataContext context, CharacterRepository charRepo)
+    public CharacterService(IMapper mapper, CharacterRepository charRepo, SkillRepository skillRepo)
     {
-        _context = context;
         _charRepo = charRepo;
+        _skillRepo = skillRepo;
         _mapper = mapper;
     }
        public async Task<ServiceResponse<List<GetCharacterDto>>> AddCharacter(AddCharacterDto newCharacter, int userId)
@@ -24,13 +24,9 @@ public class CharacterService : ICharacterService
         var response = new ServiceResponse<List<GetCharacterDto>>();
         var character = _mapper.Map<Character>(newCharacter);
         character.UserId = userId;
-        await _context.Characters.AddAsync(character); 
-        await _context.SaveChangesAsync();              
-        var characters = await _context.Characters
-            .Include(c => c.Weapon)
-            .Include(c => c.Skills)
-            .Where(c => c.User.Id == userId)
-            .ToListAsync();
+        _charRepo.Add(character); 
+        await _charRepo.SaveChangesAsync();              
+        var characters = await _charRepo.GetAllCharactersAsync(userId);
         response.Data = characters            
             .Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         return response;
@@ -42,11 +38,7 @@ public class CharacterService : ICharacterService
     public async Task<ServiceResponse<List<GetCharacterDto>>> GetAllCharacters(int userId)
     {
         var response = new ServiceResponse<List<GetCharacterDto>>();
-        var characters = await _context.Characters
-            .Include(c => c.Weapon)
-            .Include(c => c.Skills)
-            .Where(c => c.User.Id == userId)
-            .ToListAsync();
+        var characters = await _charRepo.GetAllCharactersAsync(userId);
         response.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         return response;
     }
@@ -54,11 +46,7 @@ public class CharacterService : ICharacterService
     public async Task<ServiceResponse<GetCharacterDto>> GetCharacterById(int id, int userId)
     {
         var response = new ServiceResponse<GetCharacterDto>();
-        var character = await _context.Characters
-            .Include(c => c.Weapon)
-            .Include(c => c.Skills)
-            .Where(c => c.User.Id == userId)
-            .FirstOrDefaultAsync(c => c.Id == id);//(can also use FirstOrDefault();)
+        var character = await GetCharacterById(id, userId);
         response.Data = _mapper.Map<GetCharacterDto>(character);
         return response;
     }
@@ -68,11 +56,7 @@ public class CharacterService : ICharacterService
         ServiceResponse<GetCharacterDto> response = new();
         try
         {
-            var character = await _context.Characters //Watch Include(c => c.User) function with a lambda exp to include the user
-                .Include(c => c.Weapon)
-                .Include(c => c.Skills)
-                .Where(c => c.User.Id == userId)
-                .FirstOrDefaultAsync(c => c.Id == characterToUpdate.Id);
+            var character = await _charRepo.GetCharacterAsync(characterToUpdate.Id, userId);
             if (character == null)
             {
                 response.Succes = false;
@@ -80,8 +64,8 @@ public class CharacterService : ICharacterService
                 return response;
             }
             _mapper.Map(characterToUpdate, character);
-            _context.Characters.Update(character);
-            _context.SaveChanges();
+            _charRepo.Update(character);
+            await _charRepo.SaveChangesAsync();
             response.Data = _mapper.Map<GetCharacterDto>(character);
         }
         catch (Exception ex)
@@ -92,25 +76,21 @@ public class CharacterService : ICharacterService
         return response;
     }
 
-    public async Task<ServiceResponse<List<GetCharacterDto>>> DeleteCharacter(int id, int userId)
+    public async Task<ServiceResponse<List<GetCharacterDto>>> DeleteCharacter(int characterId, int userId)
     {
         ServiceResponse<List<GetCharacterDto>> response = new();
         try
         {
-            var character = await _context.Characters
-                .Where(c => c.User.Id == userId)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var character = await _charRepo.GetCharacterAsync(characterId, userId);
             if (character == null)
             {
                 response.Succes = false;
-                response.Message = $"Character with id {id} not found in database";
+                response.Message = $"Character with id {characterId} not found in database";
                 return response;
             }
-            _context.Characters.Remove(character);
-            await _context.SaveChangesAsync();
-            var characters = await _context.Characters
-                .Where(c => c.User.Id == userId)
-                .ToListAsync();
+            _charRepo.Remove(character);
+            await _charRepo.SaveChangesAsync();
+            var characters = await _charRepo.GetAllCharactersAsync(userId);
             response.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         }
         catch (Exception ex)
@@ -126,18 +106,19 @@ public class CharacterService : ICharacterService
         var response = new ServiceResponse<GetCharacterDto>();
         try
         {
-            var character = await _context.Characters
-                .Include(c => c.Weapon)
-                .Include(c => c.Skills)
-                .FirstOrDefaultAsync(c => c.Id == newCharacterSkill.CharacterId &&
-                c.User.Id == userId);
+            var character = await _charRepo.GetCharacterAsync(newCharacterSkill.CharacterId, userId);
+                //_context.Characters
+                //.Include(c => c.Weapon)
+                //.Include(c => c.Skills)
+                //.FirstOrDefaultAsync(c => c.Id == newCharacterSkill.CharacterId &&
+                //c.User.Id == userId); //TENGO DUDAS
             if(character == null)
             {
                 response.Succes = false;
                 response.Message = "Character not found";
                 return response;
             }
-            var skill = await _context.Skills.FindAsync(newCharacterSkill.SkillId);
+            var skill = await _skillRepo.GetSkillAsync(newCharacterSkill.SkillId);
             if(skill == null)
             {
                 response.Succes = false;
@@ -145,7 +126,8 @@ public class CharacterService : ICharacterService
                 return response;
             }
             character.Skills.Add(skill);
-            await _context.SaveChangesAsync();
+            _charRepo.Update(character); //Dudas
+            await _charRepo.SaveChangesAsync();
             response.Data = _mapper.Map<GetCharacterDto>(character);
         }
         catch(Exception ex)
