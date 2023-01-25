@@ -12,12 +12,12 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace dotnet_rpg.Services.AuthenticationServices
 {
-    public class AuthRepository : IAuthRepository
+    public class AuthenticationService : IAuthenticationService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
 
-        public AuthRepository(DataContext context, IConfiguration configuration)
+        public AuthenticationService(DataContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;

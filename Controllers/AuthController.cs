@@ -10,10 +10,10 @@ namespace dotnet_rpg.Controllers;
 [Route("[controller]")]
 public class AuthController : UserContextController
 {
-    private readonly IAuthRepository _authRepo;
+    private readonly IAuthenticationService _authRepo;
     private readonly IMapper _map;
 
-    public AuthController(IMapper map, IAuthRepository authRepo)
+    public AuthController(IMapper map, IAuthenticationService authRepo)
     {
         _map = map;
         _authRepo = authRepo;

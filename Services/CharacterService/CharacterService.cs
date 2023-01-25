@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using AutoMapper;
 using dotnet_rpg.Data;
+using dotnet_rpg.Data.Repositories;
 using dotnet_rpg.DTOs.Character;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +11,12 @@ public class CharacterService : ICharacterService
 {
     private readonly IMapper _mapper;
     private readonly DataContext _context;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly CharacterRepository _charRepo;
 
-    public CharacterService(IMapper mapper, DataContext context, IHttpContextAccessor httpContextAccessor)
+    public CharacterService(IMapper mapper, DataContext context, CharacterRepository charRepo)
     {
-        _httpContextAccessor = httpContextAccessor;
         _context = context;
+        _charRepo = charRepo;
         _mapper = mapper;
     }
        public async Task<ServiceResponse<List<GetCharacterDto>>> AddCharacter(AddCharacterDto newCharacter, int userId)
@@ -23,8 +24,8 @@ public class CharacterService : ICharacterService
         var response = new ServiceResponse<List<GetCharacterDto>>();
         var character = _mapper.Map<Character>(newCharacter);
         character.UserId = userId;
-        await _context.Characters.AddAsync(character);
-        await _context.SaveChangesAsync();
+        _charRepo.Add(character);
+        await _charRepo.SaveChangesAsync();
         var characters = await _context.Characters
             .Include(c => c.Weapon)
             .Include(c => c.Skills)
