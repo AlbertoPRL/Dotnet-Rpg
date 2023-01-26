@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace dotnet_rpg.Controllers;
 
 [ApiController]
-[Route("[controller")]
+[Route("controller")]
 public class FightCotroller : ControllerBase
 {
     private readonly IFightService _fightservice;

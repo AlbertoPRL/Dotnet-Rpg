@@ -5,9 +5,9 @@ namespace dotnet_rpg.Data.Repositories;
 
 public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
 {
-    private readonly DbContext _context;
+    private readonly DataContext _context;
 
-    public Repository(DbContext context)
+    public Repository(DataContext context)
     {
         _context = context;
     }
