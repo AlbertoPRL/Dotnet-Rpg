@@ -2,6 +2,7 @@ using System.Security.Claims;
 using AutoMapper;
 using dotnet_rpg.Data;
 using dotnet_rpg.Data.Repositories;
+using dotnet_rpg.Data.Repositories.Abstractions;
 using dotnet_rpg.DTOs.Character;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +11,10 @@ namespace dotnet_rpg.Services.CharacterService;
 public class CharacterService : ICharacterService
 {
     private readonly IMapper _mapper;
-    private readonly CharacterRepository _charRepo;
-    private readonly SkillRepository _skillRepo;
+    private readonly ICharacterRepository _charRepo;
+    private readonly IRepository<Skill> _skillRepo;
 
-    public CharacterService(IMapper mapper, CharacterRepository charRepo, SkillRepository skillRepo)
+    public CharacterService(IMapper mapper, ICharacterRepository charRepo, IRepository<Skill> skillRepo)
     {
         _charRepo = charRepo;
         _skillRepo = skillRepo;
@@ -26,7 +27,7 @@ public class CharacterService : ICharacterService
         character.UserId = userId;
         _charRepo.Add(character); 
         await _charRepo.SaveChangesAsync();              
-        var characters = await _charRepo.GetAllCharactersAsync(userId);
+        var characters = await _charRepo.FindAllCharactersAsync(userId);
         response.Data = characters            
             .Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         return response;
@@ -38,7 +39,7 @@ public class CharacterService : ICharacterService
     public async Task<ServiceResponse<List<GetCharacterDto>>> GetAllCharacters(int userId)
     {
         var response = new ServiceResponse<List<GetCharacterDto>>();
-        var characters = await _charRepo.GetAllCharactersAsync(userId);
+        var characters = await _charRepo.FindAllCharactersAsync(userId);
         response.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         return response;
     }
@@ -56,7 +57,7 @@ public class CharacterService : ICharacterService
         ServiceResponse<GetCharacterDto> response = new();
         try
         {
-            var character = await _charRepo.GetCharacterAsync(characterToUpdate.Id, userId);
+            var character = await _charRepo.FindCharacterAsync(characterToUpdate.Id, userId);
             if (character == null)
             {
                 response.Succes = false;
@@ -81,7 +82,7 @@ public class CharacterService : ICharacterService
         ServiceResponse<List<GetCharacterDto>> response = new();
         try
         {
-            var character = await _charRepo.GetCharacterAsync(characterId, userId);
+            var character = await _charRepo.FindCharacterAsync(characterId, userId);
             if (character == null)
             {
                 response.Succes = false;
@@ -90,7 +91,7 @@ public class CharacterService : ICharacterService
             }
             _charRepo.Remove(character);
             await _charRepo.SaveChangesAsync();
-            var characters = await _charRepo.GetAllCharactersAsync(userId);
+            var characters = await _charRepo.FindAllCharactersAsync(userId);
             response.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         }
         catch (Exception ex)
@@ -106,19 +107,19 @@ public class CharacterService : ICharacterService
         var response = new ServiceResponse<GetCharacterDto>();
         try
         {
-            var character = await _charRepo.GetCharacterAsync(newCharacterSkill.CharacterId, userId);
+            var character = await _charRepo.FindCharacterAsync(newCharacterSkill.CharacterId, userId);
                 //_context.Characters
                 //.Include(c => c.Weapon)
                 //.Include(c => c.Skills)
                 //.FirstOrDefaultAsync(c => c.Id == newCharacterSkill.CharacterId &&
-                //c.User.Id == userId); //TENGO DUDAS
+                //c.User.Id == userId);
             if(character == null)
             {
                 response.Succes = false;
                 response.Message = "Character not found";
                 return response;
             }
-            var skill = await _skillRepo.GetSkillAsync(newCharacterSkill.SkillId);
+            var skill = await _skillRepo.FindAsync(newCharacterSkill.SkillId);
             if(skill == null)
             {
                 response.Succes = false;

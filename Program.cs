@@ -1,5 +1,7 @@
 global using dotnet_rpg.Model;
 using dotnet_rpg.Data;
+using dotnet_rpg.Data.Repositories;
+using dotnet_rpg.Data.Repositories.Abstractions;
 using dotnet_rpg.Services.AuthenticationServices;
 using dotnet_rpg.Services.CharacterService;
 using dotnet_rpg.Services.FightService;
@@ -45,6 +47,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IWeaponService, WeaponService>();
 builder.Services.AddScoped<IFightService, FightService>();
+builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+builder.Services.AddScoped<ICharacterRepository, CharacterRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
 var app = builder.Build();
 

@@ -1,5 +1,6 @@
 using AutoMapper;
 using dotnet_rpg.Data;
+using dotnet_rpg.Data.Repositories.Abstractions;
 using dotnet_rpg.DTOs.Character;
 using dotnet_rpg.DTOs.Weapon;
 using Microsoft.EntityFrameworkCore;
@@ -8,13 +9,15 @@ namespace dotnet_rpg.Services.WeaponServices;
 
 public class WeaponService : IWeaponService
 {
+    private readonly IRepository<Weapon> _weaponRepo;
     private readonly IMapper _mapper;
-    private readonly DataContext _context;
-
-    public WeaponService(DataContext context, IMapper mapper)
+    private readonly ICharacterRepository _charRepo;
+    
+    public WeaponService(IRepository<Weapon> weaponRepo, IMapper mapper, ICharacterRepository charRepo)
     {
+        _weaponRepo = weaponRepo;
         _mapper = mapper;
-        _context = context;
+        _charRepo = charRepo;
     }
 
     public async Task<ServiceResponse<GetCharacterDto>> AddWeapon(AddWeaponDto newWeapon, int userId)
@@ -22,11 +25,7 @@ public class WeaponService : IWeaponService
         ServiceResponse<GetCharacterDto> response = new();
         try
         {
-            var character = await _context.Characters
-                .Include(c => c.Skills)
-                .Include(c => c.Weapon)
-                .FirstOrDefaultAsync(c => c.Id == newWeapon.CharacterId &&
-                c.User.Id == userId);//Ask Marcel about implementation of this GetUserId() Method
+            var character = await _charRepo.FindCharacterAsync(newWeapon.CharacterId, userId);
             if (character == null)
             {
                 response.Succes = false;
@@ -34,8 +33,8 @@ public class WeaponService : IWeaponService
                 return response;
             }
             var weapon = _mapper.Map<Weapon>(newWeapon);
-            _context.Weapons.Add(weapon);
-            await _context.SaveChangesAsync();
+            _weaponRepo.Add(weapon);
+            await _weaponRepo.SaveChangesAsync();
             response.Data = _mapper.Map<GetCharacterDto>(character);
         }
         catch (Exception ex)

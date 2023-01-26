@@ -17,14 +17,14 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
         return _context.Add(entity).Entity;
     }
 
-    public async Task<TEntity?> Find(int id)
+    public async Task<TEntity?> FindAsync(int id)
     {
         return await _context.Set<TEntity>().FindAsync(id);
     }
 
-    public IEnumerable<TEntity> FindAll()
+    public async Task<IEnumerable<TEntity>> FindAllAsync()
     {
-        return _context.Set<TEntity>().ToList();
+        return await _context.Set<TEntity>().ToListAsync();
     }
 
     public void Remove(TEntity entity)

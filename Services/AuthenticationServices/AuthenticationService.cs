@@ -9,24 +9,25 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using dotnet_rpg.Data.Repositories.Abstractions;
 
 namespace dotnet_rpg.Services.AuthenticationServices
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly DataContext _context;
+        private readonly IAuthRepository _authRepo;
         private readonly IConfiguration _configuration;
 
-        public AuthenticationService(DataContext context, IConfiguration configuration)
+        public AuthenticationService(IAuthRepository authRepo, IConfiguration configuration)
         {
-            _context = context;
+            _authRepo = authRepo;
             _configuration = configuration;
         }
 
         public async Task<ServiceResponse<string>> Login(string username, string password)
         {
             var response = new ServiceResponse<string>();
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == username);
+            var user = await _authRepo.FindUserAsync(username);
             if(user == null)
             {
                 response.Succes = false;
@@ -56,15 +57,15 @@ namespace dotnet_rpg.Services.AuthenticationServices
             var encryptedPassword = CreatePasswordHash(password);
             user.PasswordHash = encryptedPassword.Hash;
             user.PasswordSalt = encryptedPassword.Salt;
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();            
+            _authRepo.Add(user);
+            await _authRepo.SaveChangesAsync();            
             response.Data = user.Id;
             return response;
         }
 
         public async Task<bool> UserExist(string username)
         {
-            if(await _context.Users.AnyAsync(u => u.Username.ToLower() == username.ToLower()))
+            if(await _authRepo.UserExistAsync(username))
             {
                 return true;
             }

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using dotnet_rpg.Data;
+using dotnet_rpg.Data.Repositories;
+using dotnet_rpg.Data.Repositories.Abstractions;
 using dotnet_rpg.DTOs.Fight;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +13,12 @@ namespace dotnet_rpg.Services.FightService;
 
 public class FightService : IFightService
 {
-    private readonly DataContext _context;
+    private readonly ICharacterRepository _charRepo;
     private readonly IMapper _mapper;
 
-    public FightService(DataContext context, IMapper mapper)
+    public FightService(ICharacterRepository charRepo, IMapper mapper)
     {
-        _context = context;
+        _charRepo = charRepo;
         _mapper = mapper;
     }
 
@@ -28,10 +30,7 @@ public class FightService : IFightService
         };
         try
         {
-            var characters = await _context.Characters
-                .Include(c => c.Weapon)
-                .Include(c => c.Skills)
-                .Where(c => request.CharacterIds.Contains(c.Id)).ToListAsync();
+            var characters = await _charRepo.FindAllByIdsAsync(request.CharacterIds);
             bool defeated = false;
             while(!defeated)
             {
@@ -72,7 +71,7 @@ public class FightService : IFightService
                     c.Fights++;
                     c.HitPoints = 100; 
                 });
-                await _context.SaveChangesAsync();
+                await _charRepo.SaveChangesAsync();
             }
         } 
         catch(Exception ex)
@@ -89,11 +88,8 @@ public class FightService : IFightService
        var response = new ServiceResponse<AttackResultDto>();
         try
         {
-            var attacker = await _context.Characters
-                .Include(c => c.Skills)
-                .FirstOrDefaultAsync(c => c.Id == request.AttackerId);
-            var opponent = await _context.Characters
-                .FirstOrDefaultAsync(c => c.Id == request.OpponentId);
+            var attacker = await _charRepo.FindIncludingSkillsAsync(request.AttackerId);
+            var opponent = await _charRepo.FindIncludingSkillsAsync(request.OpponentId);
             var skill = attacker.Skills.FirstOrDefault(s => s.Id == request.SkillId);
             if (skill == null)
             {
@@ -105,15 +101,19 @@ public class FightService : IFightService
             if (opponent.HitPoints <= 0)
                 response.Message = $"{opponent.Name} has been defeated";
 
-            response.Data = new AttackResultDto
-            {
-                Attacker = attacker.Name,
-                Opponent = opponent.Name,
-                AttackerHp = attacker.HitPoints,
-                OpponentHp = opponent.HitPoints,
-                Damage = damage
-            };
-            await _context.SaveChangesAsync();
+            // response.Data = new AttackResultDto
+            // {
+            //     Attacker = attacker.Name,
+            //     Opponent = opponent.Name,
+            //     AttackerHp = attacker.HitPoints,
+            //     OpponentHp = opponent.HitPoints,
+            //     Damage = damage
+            // };
+            response.Data = _mapper.Map<AttackResultDto>(attacker);
+            response.Data = _mapper.Map<AttackResultDto>(opponent);
+            response.Data.Damage = damage;
+
+            await _charRepo.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -141,25 +141,18 @@ public class FightService : IFightService
         var response = new ServiceResponse<AttackResultDto>();
         try
         {
-            var attacker = await _context.Characters
-                .Include(c => c.Weapon)
-                .FirstOrDefaultAsync(c => c.Id == request.AttackerId);
-            var opponent = await _context.Characters
-                .FirstOrDefaultAsync(c => c.Id == request.OpponentId);
+            var attacker = await _charRepo.FindIncludingWeaponsAsync(request.AttackerId);
+            var opponent = await  _charRepo.FindIncludingWeaponsAsync(request.OpponentId);
             int damage = DoWeponAttack(attacker, opponent);
 
             if (opponent.HitPoints <= 0)
                 response.Message = $"{opponent.Name} has been defeated";
 
-            await _context.SaveChangesAsync();
-            response.Data = new AttackResultDto
-            {
-                Attacker = attacker.Name,
-                Opponent = opponent.Name,
-                AttackerHp = attacker.HitPoints,
-                OpponentHp = opponent.HitPoints,
-                Damage = damage
-            };
+            await _charRepo.SaveChangesAsync();
+
+            response.Data = _mapper.Map<AttackResultDto>(attacker);
+            response.Data = _mapper.Map<AttackResultDto>(opponent);
+            response.Data.Damage = damage;
         }
         catch (Exception ex)
         {
@@ -184,11 +177,7 @@ public class FightService : IFightService
 
     public async Task<ServiceResponse<List<HighScoreDto>>> GetHighScore()
     {
-        var characters = await _context.Characters
-            .Where(c => c.Fights > 0)
-            .OrderByDescending(c => c.Victories)
-            .ThenBy(c => c.Defeats)
-            .ToListAsync();
+        var characters = await _charRepo.FindAllWithAtLeastOneFight();
         var response = new ServiceResponse<List<HighScoreDto>>()
         {
             Data = characters.Select(c => _mapper.Map<HighScoreDto>(c)).ToList()
