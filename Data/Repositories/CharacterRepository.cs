@@ -65,7 +65,7 @@ public class CharacterRepository : Repository<Character>, ICharacterRepository
         return character;
     }
 
-    public async Task<List<Character>?> FindAllByIdsAsync(List<int> characterIds)
+    public async Task<List<Character>> FindAllByIdsAsync(List<int> characterIds)
     {
         var characters = await _context.Characters
             .Include(c => c.Weapon)

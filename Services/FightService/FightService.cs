@@ -32,38 +32,40 @@ public class FightService : IFightService
         {
             var characters = await _charRepo.FindAllByIdsAsync(request.CharacterIds);
             bool defeated = false;
-            while(!defeated)
+            if(characters.Count > 1)
             {
-                foreach(Character attacker in characters)
+                while(!defeated)
                 {
-                    var opponents = characters.Where(c => c.Id != attacker.Id).ToList();
-                    var opponent = opponents[new Random().Next(opponents.Count)];
+                    foreach(Character attacker in characters)
+                    {
+                        var opponents = characters.Where(c => c.Id != attacker.Id).ToList();
+                        var opponent = opponents[new Random().Next(opponents.Count)];
 
-                    int damage = 0;
-                    string attackUsed = string.Empty;
-
-                    bool useWeapon = new Random().Next(2) == 0;
-                    if(useWeapon)
-                    {
-                        attackUsed = attacker.Weapon.Name;
-                        damage = DoWeponAttack(attacker, opponent);
-                    }
-                    else
-                    {
-                        var skill = attacker.Skills[new Random().Next(attacker.Skills.Count)];
-                        attackUsed = skill.Name;
-                        damage = DoSkillAttack(attacker,opponent, skill);
-                    }
-                    response.Data.Log
-                        .Add($"{attacker.Name} attacks {opponent.Name} using {attackUsed} with {(damage >= 0 ? damage: 0)} damage");
-                    if(opponent.HitPoints <= 0)
-                    {
-                        defeated = true;
-                        attacker.Victories++;
-                        opponent.Defeats++;
-                        response.Data.Log.Add($"{opponent.Name} has been defeated");
-                        response.Data.Log.Add($"{attacker.Name} wins with {attacker.HitPoints} HP left");
-                        break;
+                        int damage = 0;
+                        string attackUsed = string.Empty;
+                        bool useWeapon = new Random().Next(2) == 0;
+                        if(useWeapon)
+                        {
+                            attackUsed = attacker.Weapon.Name;
+                            damage = DoWeponAttack(attacker, opponent);
+                        }
+                        else
+                        {
+                            var skill = attacker.Skills[new Random().Next(attacker.Skills.Count)];
+                            attackUsed = skill.Name;
+                            damage = DoSkillAttack(attacker,opponent, skill);
+                        }
+                        response.Data.Log
+                            .Add($"{attacker.Name} attacks {opponent.Name} using {attackUsed} with {(damage >= 0 ? damage: 0)} damage");
+                        if(opponent.HitPoints <= 0)
+                        {
+                            defeated = true;
+                            attacker.Victories++;
+                            opponent.Defeats++;
+                            response.Data.Log.Add($"{opponent.Name} has been defeated");
+                            response.Data.Log.Add($"{attacker.Name} wins with {attacker.HitPoints} HP left");
+                            break;
+                        }
                     }
                 }
                 characters.ForEach(c =>
@@ -71,8 +73,13 @@ public class FightService : IFightService
                     c.Fights++;
                     c.HitPoints = 100; 
                 });
-                await _charRepo.SaveChangesAsync();
+                await _charRepo.SaveChangesAsync();                
             }
+            else
+            {
+                response.Succes = false;
+                response.Message = "The Character can't fight alone";
+            }                
         } 
         catch(Exception ex)
         {
