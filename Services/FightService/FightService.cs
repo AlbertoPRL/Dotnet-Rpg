@@ -32,11 +32,11 @@ public class FightService : IFightService
         {
             var characters = await _charRepo.FindAllByIdsAsync(request.CharacterIds);
             bool defeated = false;
-            if(characters.Count > 1)
+            if (characters.Count > 1)
             {
-                while(!defeated)
+                while (!defeated)
                 {
-                    foreach(Character attacker in characters)
+                    foreach (Character attacker in characters)
                     {
                         var opponents = characters.Where(c => c.Id != attacker.Id).ToList();
                         var opponent = opponents[new Random().Next(opponents.Count)];
@@ -44,7 +44,7 @@ public class FightService : IFightService
                         int damage = 0;
                         string attackUsed = string.Empty;
                         bool useWeapon = new Random().Next(2) == 0;
-                        if(useWeapon)
+                        if (useWeapon)
                         {
                             attackUsed = attacker.Weapon.Name;
                             damage = DoWeponAttack(attacker, opponent);
@@ -53,11 +53,11 @@ public class FightService : IFightService
                         {
                             var skill = attacker.Skills[new Random().Next(attacker.Skills.Count)];
                             attackUsed = skill.Name;
-                            damage = DoSkillAttack(attacker,opponent, skill);
+                            damage = DoSkillAttack(attacker, opponent, skill);
                         }
                         response.Data.Log
-                            .Add($"{attacker.Name} attacks {opponent.Name} using {attackUsed} with {(damage >= 0 ? damage: 0)} damage");
-                        if(opponent.HitPoints <= 0)
+                            .Add($"{attacker.Name} attacks {opponent.Name} using {attackUsed} with {(damage >= 0 ? damage : 0)} damage");
+                        if (opponent.HitPoints <= 0)
                         {
                             defeated = true;
                             attacker.Victories++;
@@ -69,30 +69,28 @@ public class FightService : IFightService
                     }
                 }
                 characters.ForEach(c =>
-                {    
+                {
                     c.Fights++;
-                    c.HitPoints = 100; 
+                    c.HitPoints = 100;
                 });
-                await _charRepo.SaveChangesAsync();                
+                await _charRepo.SaveChangesAsync();
             }
             else
             {
-                response.Succes = false;
                 response.Message = "The Character can't fight alone";
-            }                
-        } 
-        catch(Exception ex)
+            }
+        }
+        catch (Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;
-        } 
+        }
         return response;
 
     }
 
     public async Task<ServiceResponse<AttackResultDto>> SkillAttack(SkillAttackDto request)
     {
-       var response = new ServiceResponse<AttackResultDto>();
+        var response = new ServiceResponse<AttackResultDto>();
         try
         {
             var attacker = await _charRepo.FindIncludingSkillsAsync(request.AttackerId);
@@ -100,7 +98,6 @@ public class FightService : IFightService
             var skill = attacker.Skills.FirstOrDefault(s => s.Id == request.SkillId);
             if (skill == null)
             {
-                response.Succes = false;
                 response.Message = "Skill not learned";
                 return response;
             }
@@ -124,9 +121,8 @@ public class FightService : IFightService
         }
         catch (Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;
-        } 
+        }
         return response;
     }
 
@@ -149,7 +145,7 @@ public class FightService : IFightService
         try
         {
             var attacker = await _charRepo.FindIncludingWeaponsAsync(request.AttackerId);
-            var opponent = await  _charRepo.FindIncludingWeaponsAsync(request.OpponentId);
+            var opponent = await _charRepo.FindIncludingWeaponsAsync(request.OpponentId);
             int damage = DoWeponAttack(attacker, opponent);
 
             if (opponent.HitPoints <= 0)
@@ -163,9 +159,8 @@ public class FightService : IFightService
         }
         catch (Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;
-        } 
+        }
         return response;
     }
 

@@ -60,7 +60,6 @@ public class CharacterService : ICharacterService
             var character = await _charRepo.FindCharacterAsync(characterToUpdate.Id, userId);
             if (character == null)
             {
-                response.Succes = false;
                 response.Message = $"Character with id {characterToUpdate.Id} not found in database";
                 return response;
             }
@@ -71,7 +70,6 @@ public class CharacterService : ICharacterService
         }
         catch (Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;
         }
         return response;
@@ -85,7 +83,6 @@ public class CharacterService : ICharacterService
             var character = await _charRepo.FindCharacterAsync(characterId, userId);
             if (character == null)
             {
-                response.Succes = false;
                 response.Message = $"Character with id {characterId} not found in database";
                 return response;
             }
@@ -96,7 +93,6 @@ public class CharacterService : ICharacterService
         }
         catch (Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;
         }
         return response;
@@ -115,14 +111,12 @@ public class CharacterService : ICharacterService
                 //c.User.Id == userId);
             if(character == null)
             {
-                response.Succes = false;
                 response.Message = "Character not found";
                 return response;
             }
             var skill = await _skillRepo.FindAsync(newCharacterSkill.SkillId);
             if(skill == null)
             {
-                response.Succes = false;
                 response.Message = "Skill not found";
                 return response;
             }
@@ -133,7 +127,6 @@ public class CharacterService : ICharacterService
         }
         catch(Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;            
         }
         return response;

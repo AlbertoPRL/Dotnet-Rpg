@@ -1,13 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace dotnet_rpg.Model;
 
 public class ServiceResponse<T>
 {
+    private string _message = string.Empty;
     public T? Data { get; set; }
-    public bool Succes { get; set; } = true;
-    public string Message { get; set; } = string.Empty;
+    public bool Succes { get; private set; } = true;
+    public string Message
+    {
+        get
+        {
+            return _message;
+        }
+        set
+        {
+            _message = value;
+            Succes = false;
+        }
+    }
 }

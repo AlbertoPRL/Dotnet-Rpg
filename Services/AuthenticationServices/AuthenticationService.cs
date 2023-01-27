@@ -28,15 +28,13 @@ namespace dotnet_rpg.Services.AuthenticationServices
         {
             var response = new ServiceResponse<string>();
             var user = await _authRepo.FindUserAsync(username);
-            if(user == null)
+            if (user == null)
             {
-                response.Succes = false;
-                response.Message = "User not found";
+                response.Message = "User not found.";
             }
-            else if(!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            else if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             {
-                response.Succes = false;
-                response.Message = "Wrong password";
+                response.Message = "Wrong password.";
             }
             else
             {
@@ -48,9 +46,8 @@ namespace dotnet_rpg.Services.AuthenticationServices
         public async Task<ServiceResponse<int>> Register(User user, string password)
         {
             var response = new ServiceResponse<int>();
-            if(await UserExist(user.Username))
+            if (await UserExist(user.Username))
             {
-                response.Succes = false;
                 response.Message = "User already exist.";
                 return response;
             }
@@ -58,14 +55,14 @@ namespace dotnet_rpg.Services.AuthenticationServices
             user.PasswordHash = encryptedPassword.Hash;
             user.PasswordSalt = encryptedPassword.Salt;
             _authRepo.Add(user);
-            await _authRepo.SaveChangesAsync();            
+            await _authRepo.SaveChangesAsync();
             response.Data = user.Id;
             return response;
         }
 
         public async Task<bool> UserExist(string username)
         {
-            if(await _authRepo.UserExistAsync(username))
+            if (await _authRepo.UserExistAsync(username))
             {
                 return true;
             }
@@ -76,7 +73,7 @@ namespace dotnet_rpg.Services.AuthenticationServices
         {
             (byte[] Hash, byte[] Salt) encryptedPassword;
             using (var hmac = new HMACSHA512())
-            {                
+            {
                 encryptedPassword.Hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
                 encryptedPassword.Salt = hmac.Key;
             }

@@ -28,7 +28,6 @@ public class WeaponService : IWeaponService
             var character = await _charRepo.FindCharacterAsync(newWeapon.CharacterId, userId);
             if (character == null)
             {
-                response.Succes = false;
                 response.Message = "Character not found";
                 return response;
             }
@@ -39,7 +38,6 @@ public class WeaponService : IWeaponService
         }
         catch (Exception ex)
         {
-            response.Succes = false;
             response.Message = ex.Message;
         }
         return response;
